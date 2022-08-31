@@ -34,12 +34,15 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="place holder"
+            android:layout_margin="8dp"
+            android:maxLines="3"
             android:textSize="@dimen/default_text_size" />
 
         <TextView
             android:id="@+id/textView_detail_status"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="place holder"
             android:textSize="@dimen/default_text_size" />
 

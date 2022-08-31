@@ -42,13 +42,13 @@ class MainActivity : AppCompatActivity() {
             if (::url.isInitialized) {
                 contentMainBinding.customButton.buttonState = ButtonState.Loading
                 download()
-            } else
+            } else {
                 Toast.makeText(
                     this@MainActivity,
                     getString(R.string.you_should_select_from_list),
                     Toast.LENGTH_SHORT
                 ).show()
-
+            }
         }
     }
 
