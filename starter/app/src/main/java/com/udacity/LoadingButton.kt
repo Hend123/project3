@@ -1,5 +1,4 @@
 package com.udacity
-
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
@@ -14,55 +13,68 @@ class LoadingButton @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
     private var widthSize = 0
     private var heightSize = 0
-    private var textColor = 0
-    private var backGroundColor = 0
-    private var circleColor = 0
-    private var textSize = 0
+
+    private var animator = ValueAnimator()
     private var buttonProgress: Float = 0f
+    private var backgroundBtnColor = 0
+    private var circleColor = 0
+    private var textButton = ""
 
-    private var text = context.getString(R.string.download)
-    private var animator: ValueAnimator = ValueAnimator()
-    private val rect: RectF = RectF(80f, 30f, 200f, 150f)
-    private var value = 0.0f
-    private var progressBtn: Float = 0f
+    private var rectF = RectF(0f, 0f, 200f, 150f)
 
-
-     var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed) { p, old, new ->
-
+    var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed){ p, old, new ->
         when (new) {
             ButtonState.Loading -> {
                 startAnimation()
                 isEnabled = false
             }
-
             ButtonState.Completed -> {
                 animator.cancel()
                 invalidate()
                 isEnabled = true
                 buttonState = ButtonState.Clicked
             }
-
             else -> {
                 isEnabled = true
-                invalidate()
                 return@observable
             }
         }
+    }
+    private fun startAnimation(){
+        animator = ValueAnimator.ofFloat(0f, 1f).apply {
+            addUpdateListener {
+                buttonProgress = animatedValue as Float
+                invalidate()
+            }
+            repeatCount =1
+            repeatMode = ValueAnimator.REVERSE
+            duration = 2000
+            start()
+        }
+    }
 
-
+    init {
+        buttonState = ButtonState.Clicked
+        context.withStyledAttributes(attrs, R.styleable.LoadingButton) {
+            backgroundBtnColor =
+                getColor(R.styleable.LoadingButton_backgroundColor, Color.GRAY)
+            circleColor =
+                getColor(R.styleable.LoadingButton_circleColor, Color.YELLOW)
+            textButton = getString(R.styleable.LoadingButton_textButton).toString()
+        }
     }
 
     private val paintText = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
         typeface = Typeface.create("", Typeface.BOLD)
-        textSize = 20.0f * resources.displayMetrics.density
+        textSize = 18.0f * resources.displayMetrics.density
         textAlign = Paint.Align.CENTER
-        color = textColor
+        color = Color.WHITE
     }
 
     private val paintBackground = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = backGroundColor
+        color = backgroundBtnColor
     }
 
     private val paintProgress = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -71,29 +83,34 @@ class LoadingButton @JvmOverloads constructor(
     }
 
 
-    init {
-        buttonState = ButtonState.Clicked
-        context.withStyledAttributes(attrs, R.styleable.LoadingButton) {
-            textColor = getColor(R.styleable.LoadingButton_textColor, 0)
-            backGroundColor = getColor(R.styleable.LoadingButton_backgroundColor, 0)
-            circleColor = getColor(R.styleable.LoadingButton_circleColor, 0)
-            textSize = getDimensionPixelSize(R.styleable.LoadingButton_textSize, 0)
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+        canvas?.apply {
+            drawBackgroundButton(canvas)
+            when (buttonState) {
+                ButtonState.Loading -> {
+                    drawBackgroundButton(canvas, buttonProgress)
+                    drawArc(
+                        rectF,
+                        360f,
+                        buttonProgress * -360,
+                        true,
+                        paintProgress
+                    )
+                    drawTextButton(canvas, resources.getString(R.string.button_loading))
+                }
+                ButtonState.Completed -> {
+                    drawTextButton(canvas, resources.getString(R.string.complete))
+                }
 
-        }
-    }
-
-    private fun startAnimation() {
-        animator = ValueAnimator.ofFloat(0f, 1f).apply {
-            addUpdateListener {
-                progressBtn = animatedValue as Float
-                invalidate()
+                else -> {
+                    drawTextButton(canvas, textButton)
+                }
             }
-            repeatCount = 1
-            repeatMode = ValueAnimator.REVERSE
-            duration = 2000
-            start()
+            invalidate()
         }
     }
+
     private fun drawBackgroundButton(canvas: Canvas?, progress: Float? = null) {
         canvas?.apply {
             if (progress != null) {
@@ -111,37 +128,6 @@ class LoadingButton @JvmOverloads constructor(
         }
     }
 
-    override fun onDraw(canvas: Canvas?) {
-        super.onDraw(canvas)
-        canvas?.apply {
-            drawBackgroundButton(canvas)
-            when (buttonState) {
-                ButtonState.Loading -> {
-                    drawBackgroundButton(canvas, buttonProgress)
-                    drawArc(
-                        rect,
-                        -180f,
-                        buttonProgress * 360,
-                        true,
-                        paintProgress
-                    )
-
-                    drawTextButton(canvas, resources.getString(R.string.button_loading))
-                }
-
-                ButtonState.Completed -> {
-                    drawTextButton(canvas, resources.getString(R.string.complete))
-                }
-
-                else -> {
-                    drawTextButton(canvas, text)
-                }
-            }
-            invalidate()
-        }
-
-    }
-
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val minWidth: Int = paddingLeft + paddingRight + suggestedMinimumWidth
         val w: Int = resolveSizeAndState(minWidth, widthMeasureSpec, 1)
@@ -154,8 +140,4 @@ class LoadingButton @JvmOverloads constructor(
         heightSize = h
         setMeasuredDimension(w, h)
     }
-
-
-
-
 }
